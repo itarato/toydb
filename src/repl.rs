@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+use query_parser;
+
 enum ReplCommand {
   Quit,
   Help,
@@ -65,26 +67,17 @@ impl Repl {
 fn parse_command(command: &String) -> Result<Command, ()> {
   let slice: &str = &command[..];
 
-  match slice.trim() {
-    "Q" | "QUIT" => { return Ok(Command::ReplCommand(ReplCommand::Quit)); }
-    "H" | "HELP" => { return Ok(Command::ReplCommand(ReplCommand::Help)); }
+  match &slice.trim().to_lowercase()[..] {
+    "q" | "quit" => { return Ok(Command::ReplCommand(ReplCommand::Quit)); }
+    "h" | "help" => { return Ok(Command::ReplCommand(ReplCommand::Help)); }
     _ => {},
   };
 
-  if looks_like_query(command) {
+  if query_parser::QueryParser::looks_like_query(command) {
     return Ok(Command::DBCommand(command.clone()));
   }
 
   Err(())
-}
-
-fn looks_like_query(raw: &String) -> bool {
-  let slice: &str = &raw[..];
-  if slice.to_lowercase().starts_with("select") { return true; }
-  if slice.to_lowercase().starts_with("create table") { return true; }
-  if slice.to_lowercase().starts_with("insert") { return true; }
-
-  return false;
 }
 
 fn print_help() {
