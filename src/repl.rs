@@ -91,4 +91,6 @@ fn print_help() {
   println!("Command list:");
   println!("\tQUIT");
   println!("\tHELP");
+  println!("\tCreate table: + TABLENAME (FIELDNAME TYPE)+");
+  println!("\tSelect query: ? (FIELD_NAME)+ > TABLENAME");
 }

@@ -32,6 +32,7 @@ impl QueryParser {
 
     match &tokens[0].to_lowercase()[..] {
       "+" => parse_create_table(&mut tokens),
+      "?" => parse_select(&mut tokens),
       _ => {
         error!("Unknown query: {:#?}", raw);
         return Err(());
@@ -82,4 +83,21 @@ fn parse_create_table(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
     table_name.to_owned(),
     fields,
   )))
+}
+
+fn parse_select(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
+  assert!(tokens.len() >= 4);
+  assert_eq!("?", tokens.remove(0));
+
+  let mut columns: Vec<String> = vec![];
+
+  while tokens[0] != ">" {
+    let column_name = tokens.remove(0);
+    columns.push(column_name.to_owned());
+  }
+
+  assert_eq!(">", tokens.remove(0));
+  let table = tokens.remove(0).to_owned();
+
+  Ok(query::Query::Select(query::SelectQuery::new(table, columns)))
 }

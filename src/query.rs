@@ -53,4 +53,16 @@ impl CreateQuery {
 }
 
 #[derive(Debug)]
-pub struct SelectQuery {}
+pub struct SelectQuery {
+  table: String,
+  columns: Vec<String>,
+}
+
+impl SelectQuery {
+  pub fn new(table: String, columns: Vec<String>) -> SelectQuery {
+    SelectQuery {
+      table,
+      columns,
+    }
+  }
+}
