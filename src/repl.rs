@@ -1,6 +1,7 @@
-use std::io::{self, Write};
-
+use engine_operator;
 use query_parser;
+use std::cell::RefCell;
+use std::io::{self, Write};
 
 enum ReplCommand {
   Quit,
@@ -12,17 +13,16 @@ enum Command {
   DBCommand(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Repl {
   query_parser: query_parser::QueryParser,
+  engine_operator: RefCell<engine_operator::EngineOperator>,
 }
 
 impl Repl {
   pub fn new() -> Repl {
     info!("REPL has been initialized");
-    Repl {
-      query_parser: query_parser::QueryParser::new(),
-    }
+    Default::default()
   }
 
   pub fn start(&self) {
@@ -51,6 +51,8 @@ impl Repl {
           Ok(Command::DBCommand(db_command)) => {
             let query = self.query_parser.parse(&db_command);
             println!("Got DB Query: {:#?}", query);
+
+            self.engine_operator.borrow_mut().execute(query.unwrap());
           }
           Err(_) => {
             println!("Command [{:#?}] not known. Try again.", command);

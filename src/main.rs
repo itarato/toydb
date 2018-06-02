@@ -5,6 +5,8 @@ extern crate env_logger;
 mod query;
 mod query_parser;
 mod repl;
+mod engine;
+mod engine_operator;
 
 fn main() {
   env_logger::init();

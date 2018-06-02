@@ -1,13 +1,9 @@
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct QueryParser;
 
 use query;
 
 impl QueryParser {
-  pub fn new() -> QueryParser {
-    QueryParser
-  }
-
   pub fn looks_like_query(raw: &String) -> bool {
     let slice: &str = &raw[..];
     if slice.to_lowercase().starts_with("?") {
@@ -99,5 +95,7 @@ fn parse_select(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
   assert_eq!(">", tokens.remove(0));
   let table = tokens.remove(0).to_owned();
 
-  Ok(query::Query::Select(query::SelectQuery::new(table, columns)))
+  Ok(query::Query::Select(query::SelectQuery::new(
+    table, columns,
+  )))
 }
