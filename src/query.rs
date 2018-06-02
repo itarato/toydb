@@ -5,18 +5,27 @@ pub enum Query {
   Select(SelectQuery),
 }
 
+impl fmt::Debug for Query {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match &self {
+      Query::Create(q) => write!(f, "Create query [{:#?}]", q),
+      Query::Select(q) => write!(f, "Select query [{:#?}]", q),
+    }
+  }
+}
+
 pub enum Type {
   Int,
   Varchar(u8),
 }
 
 impl fmt::Debug for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-      match &self {
-        Type::Int => write!(f, "Int"),
-        Type::Varchar(n) => write!(f, "Varchar of size {}", n),
-      }
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match &self {
+      Type::Int => write!(f, "Int"),
+      Type::Varchar(n) => write!(f, "Varchar of size {}", n),
     }
+  }
 }
 
 #[derive(Debug)]
@@ -27,10 +36,7 @@ pub struct FieldDef {
 
 impl FieldDef {
   pub fn new(name: String, config: Type) -> FieldDef {
-    FieldDef {
-      name,
-      config,
-    }
+    FieldDef { name, config }
   }
 }
 
@@ -42,14 +48,9 @@ pub struct CreateQuery {
 
 impl CreateQuery {
   pub fn new(table: String, fields: Vec<FieldDef>) -> CreateQuery {
-    CreateQuery {
-      table,
-      fields,
-    }
+    CreateQuery { table, fields }
   }
 }
 
 #[derive(Debug)]
-pub struct SelectQuery {
-
-}
+pub struct SelectQuery {}

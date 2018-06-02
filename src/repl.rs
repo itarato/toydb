@@ -13,12 +13,16 @@ enum Command {
 }
 
 #[derive(Debug)]
-pub struct Repl;
+pub struct Repl {
+  query_parser: query_parser::QueryParser,
+}
 
 impl Repl {
   pub fn new() -> Repl {
     info!("REPL has been initialized");
-    Repl
+    Repl {
+      query_parser: query_parser::QueryParser::new(),
+    }
   }
 
   pub fn start(&self) {
@@ -35,29 +39,28 @@ impl Repl {
         info!("{} byes are read", n);
 
         match parse_command(&command) {
-            Ok(Command::ReplCommand(repl_command)) => {
-              match repl_command {
-                ReplCommand::Quit => {
-                  println!("Bye!");
-                  return;
-                }
-                ReplCommand::Help => {
-                  print_help();
-                }
-              }
-            },
-            Ok(Command::DBCommand(repl_command)) => {
-              println!("GOT {:?}", repl_command);
-            },
-            Err(_) => {
-              println!("Command [{:#?}] not known. Try again.", command);
-            },
+          Ok(Command::ReplCommand(repl_command)) => match repl_command {
+            ReplCommand::Quit => {
+              println!("Bye!");
+              return;
+            }
+            ReplCommand::Help => {
+              print_help();
+            }
+          },
+          Ok(Command::DBCommand(db_command)) => {
+            let query = self.query_parser.parse(&db_command);
+            println!("Got DB Query: {:#?}", query);
+          }
+          Err(_) => {
+            println!("Command [{:#?}] not known. Try again.", command);
+          }
         }
-      },
+      }
       Err(e) => {
         error!("Read error: {}", e);
         return;
-      },
+      }
     }
 
     self.start();
@@ -68,9 +71,13 @@ fn parse_command(command: &String) -> Result<Command, ()> {
   let slice: &str = &command[..];
 
   match &slice.trim().to_lowercase()[..] {
-    "q" | "quit" => { return Ok(Command::ReplCommand(ReplCommand::Quit)); }
-    "h" | "help" => { return Ok(Command::ReplCommand(ReplCommand::Help)); }
-    _ => {},
+    "q" | "quit" => {
+      return Ok(Command::ReplCommand(ReplCommand::Quit));
+    }
+    "h" | "help" => {
+      return Ok(Command::ReplCommand(ReplCommand::Help));
+    }
+    _ => {}
   };
 
   if query_parser::QueryParser::looks_like_query(command) {

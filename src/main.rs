@@ -2,9 +2,9 @@
 extern crate log;
 extern crate env_logger;
 
+mod query;
 mod query_parser;
 mod repl;
-mod query;
 
 fn main() {
   env_logger::init();
