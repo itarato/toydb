@@ -1,8 +1,10 @@
 use std::fmt;
+use std::collections::HashMap;
 
 pub enum Query {
   Create(CreateQuery),
   Select(SelectQuery),
+  Insert(InsertQuery),
 }
 
 impl fmt::Debug for Query {
@@ -10,6 +12,7 @@ impl fmt::Debug for Query {
     match &self {
       Query::Create(q) => write!(f, "Create query [{:#?}]", q),
       Query::Select(q) => write!(f, "Select query [{:#?}]", q),
+      Query::Insert(q) => write!(f, "Insert query [{:#?}]", q),
     }
   }
 }
@@ -42,8 +45,8 @@ impl FieldDef {
 
 #[derive(Debug)]
 pub struct CreateQuery {
-  table: String,
-  fields: Vec<FieldDef>,
+  pub table: String,
+  pub fields: Vec<FieldDef>,
 }
 
 impl CreateQuery {
@@ -63,6 +66,21 @@ impl SelectQuery {
     SelectQuery {
       table,
       columns,
+    }
+  }
+}
+
+#[derive(Default, Debug)]
+pub struct InsertQuery {
+  table_name: String,
+  raw_inserts: HashMap<String, String>,
+}
+
+impl InsertQuery {
+  pub fn new(table_name: String, raw_inserts: HashMap<String, String>) -> InsertQuery {
+    InsertQuery {
+      table_name,
+      raw_inserts,
     }
   }
 }

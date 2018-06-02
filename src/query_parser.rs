@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Default)]
 pub struct QueryParser;
 
@@ -29,6 +31,7 @@ impl QueryParser {
     match &tokens[0].to_lowercase()[..] {
       "+" => parse_create_table(&mut tokens),
       "?" => parse_select(&mut tokens),
+      ">" => parse_insert(&mut tokens),
       _ => {
         error!("Unknown query: {:#?}", raw);
         return Err(());
@@ -98,4 +101,18 @@ fn parse_select(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
   Ok(query::Query::Select(query::SelectQuery::new(
     table, columns,
   )))
+}
+
+fn parse_insert(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
+  assert!(tokens.len() >= 4);
+  assert_eq!(">", tokens.remove(0));
+
+  let table_name = tokens.remove(0).to_owned();
+  let mut raw_inserts: HashMap<String, String> = HashMap::new();
+
+  while tokens.len() > 0 {
+    raw_inserts.insert(tokens.remove(0).to_owned(), tokens.remove(0).to_owned());
+  }
+
+  Ok(query::Query::Insert(query::InsertQuery::new(table_name, raw_inserts)))
 }

@@ -12,9 +12,14 @@ impl EngineOperator {
 
     match query {
       query::Query::Create(q) => {
-        
+        let _ = self.engine.create_table(q);
       }
-      query::Query::Select(q) => {}
+      query::Query::Select(q) => {
+        println!("Exec query {:#?}", q);
+      }
+      query::Query::Insert(q) => {
+        self.engine.insert(q);
+      }
     }
   }
 }
