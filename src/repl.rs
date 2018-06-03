@@ -50,12 +50,12 @@ impl Repl {
           },
           Ok(Command::DBCommand(db_command)) => {
             let query = self.query_parser.parse(&db_command);
-            println!("Got DB Query: {:#?}", query);
+            info!("Got DB Query: {:#?}", query);
 
             self.engine_operator.borrow_mut().execute(query.unwrap());
           }
           Err(_) => {
-            println!("Command [{:#?}] not known. Try again.", command);
+            info!("Command [{:#?}] not known. Try again.", command);
           }
         }
       }
@@ -95,4 +95,5 @@ fn print_help() {
   println!("\tHELP");
   println!("\tCreate table: + TABLENAME (FIELDNAME TYPE)+");
   println!("\tSelect query: ? (FIELD_NAME)+ > TABLENAME");
+  println!("\tInsert query: > TABLENAME (FIELD_NAME VALUE)+");
 }

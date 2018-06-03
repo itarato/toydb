@@ -15,7 +15,9 @@ impl EngineOperator {
         let _ = self.engine.create_table(q);
       }
       query::Query::Select(q) => {
-        println!("Exec query {:#?}", q);
+        info!("Exec query {:#?}", q);
+        let res = self.engine.select(q);
+        println!("{:#?}", res);
       }
       query::Query::Insert(q) => {
         let _ = self.engine.insert(q);

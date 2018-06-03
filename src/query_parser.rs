@@ -114,5 +114,8 @@ fn parse_insert(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
     raw_inserts.insert(tokens.remove(0).to_owned(), tokens.remove(0).to_owned());
   }
 
-  Ok(query::Query::Insert(query::InsertQuery::new(table_name, raw_inserts)))
+  Ok(query::Query::Insert(query::InsertQuery::new(
+    table_name,
+    raw_inserts,
+  )))
 }

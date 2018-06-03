@@ -57,8 +57,8 @@ impl CreateQuery {
 
 #[derive(Debug)]
 pub struct SelectQuery {
-  table: String,
-  columns: Vec<String>,
+  pub table: String,
+  pub columns: Vec<String>,
 }
 
 impl SelectQuery {
