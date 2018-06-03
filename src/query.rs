@@ -33,8 +33,8 @@ impl fmt::Debug for Type {
 
 #[derive(Debug)]
 pub struct FieldDef {
-  name: String,
-  config: Type,
+  pub name: String,
+  pub config: Type,
 }
 
 impl FieldDef {
@@ -72,8 +72,8 @@ impl SelectQuery {
 
 #[derive(Default, Debug)]
 pub struct InsertQuery {
-  table_name: String,
-  raw_inserts: HashMap<String, String>,
+  pub table_name: String,
+  pub raw_inserts: HashMap<String, String>,
 }
 
 impl InsertQuery {

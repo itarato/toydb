@@ -18,7 +18,7 @@ impl EngineOperator {
         println!("Exec query {:#?}", q);
       }
       query::Query::Insert(q) => {
-        self.engine.insert(q);
+        let _ = self.engine.insert(q);
       }
     }
   }
