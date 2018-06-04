@@ -173,7 +173,15 @@ impl Engine {
         for row in &db.data {
             let mut row_vals: Vec<util::Val> = vec![];
 
-            for (_, column_info) in &db.schema {
+            for column_name in &query.columns {
+                let column_info = match db.schema.get(column_name) {
+                    Some(ci) => ci,
+                    None => {
+                        // @TODO this check should happen before looping rows.
+                        error!("Column not found");
+                        continue;
+                    }
+                };
                 row_vals.push(match column_info.field_def.config {
                     query::Type::Int => {
                         let mut val = 0_u32;
