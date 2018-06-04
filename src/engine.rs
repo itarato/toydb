@@ -4,44 +4,91 @@ use std::str;
 use util;
 
 #[derive(Debug)]
+struct ColumnInfo {
+    name: String,
+    offs: usize,
+    size: usize,
+    field_def: query::FieldDef,
+}
+
+impl ColumnInfo {
+    fn new(name: String, offs: usize, size: usize, field_def: query::FieldDef) -> ColumnInfo {
+        ColumnInfo {
+            name,
+            offs,
+            size,
+            field_def,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Database {
-    schema: Vec<query::FieldDef>,
+    schema: HashMap<String, ColumnInfo>,
     data: Vec<Vec<u8>>,
 }
 
 impl Database {
     pub fn new(schema: Vec<query::FieldDef>) -> Database {
         Database {
-            schema,
+            schema: restructure_field_def_list(schema),
             data: vec![],
         }
     }
 
     pub fn raw_insert(&mut self, raw_inserts: HashMap<String, String>) -> Result<(), ()> {
-        let schema_size = schema_byte_size(&self.schema);
+        let schema_size = self.schema_byte_size();
         let mut row: Vec<u8> = vec![0; schema_size];
 
-        let mut offs = 0_usize;
-        for def in &self.schema {
-            let size = size_of_type(&def.config);
-
-            match raw_inserts.get(&def.name[..]) {
+        for (column_name, column_info) in &self.schema {
+            match raw_inserts.get(&column_name[..]) {
                 Some(raw) => {
-                    let _ = write_bytes(&mut row, size, offs, raw, &def.config).or_else(|e| {
+                    let _ = write_bytes(
+                        &mut row,
+                        column_info.size,
+                        column_info.offs,
+                        raw,
+                        &column_info.field_def.config,
+                    ).or_else(|e| {
                         warn!("Data write error");
                         Err(e)
                     });
                 }
                 None => {}
             };
-
-            offs += size;
         }
 
         self.data.push(row);
 
         Ok(())
     }
+
+    // @todo There is a better way to do this.
+    fn schema_byte_size(&self) -> usize {
+        let mut size = 0_usize;
+
+        for (_, column_info) in &self.schema {
+            size += column_info.size;
+        }
+
+        size
+    }
+}
+
+fn restructure_field_def_list(field_defs: Vec<query::FieldDef>) -> HashMap<String, ColumnInfo> {
+    let mut schema: HashMap<String, ColumnInfo> = HashMap::new();
+
+    let mut offs = 0_usize;
+    for field_def in field_defs {
+        let size = size_of_type(&field_def.config);
+        schema.insert(
+            field_def.name.clone(),
+            ColumnInfo::new(field_def.name.clone(), offs, size, field_def),
+        );
+        offs += size;
+    }
+
+    schema
 }
 
 fn write_bytes(
@@ -78,16 +125,6 @@ fn write_bytes(
         }
     }
     Ok(())
-}
-
-fn schema_byte_size(schema: &Vec<query::FieldDef>) -> usize {
-    let mut size = 0_usize;
-
-    for field_def in schema {
-        size += size_of_type(&field_def.config);
-    }
-
-    size
 }
 
 fn size_of_type(data_type: &query::Type) -> usize {
@@ -134,33 +171,25 @@ impl Engine {
         let mut res: Vec<Vec<util::Val>> = vec![];
 
         for row in &db.data {
-            let mut offs = 0_usize;
             let mut row_vals: Vec<util::Val> = vec![];
 
-            for query::FieldDef {
-                name: _,
-                config: data_type,
-            } in &db.schema
-            {
-                row_vals.push(match data_type {
+            for (_, column_info) in &db.schema {
+                row_vals.push(match column_info.field_def.config {
                     query::Type::Int => {
                         let mut val = 0_u32;
-                        let size = size_of_type(data_type);
 
-                        for i in 0..size {
-                            val |= (row[offs + i] as u32) << (i * 8);
+                        for i in 0..column_info.size {
+                            val |= (row[column_info.offs + i] as u32) << (i * 8);
                         }
 
                         util::Val::U32(val)
                     }
                     query::Type::Varchar(n) => util::Val::Varchar(
-                        str::from_utf8(&row[offs..(offs + (*n as usize))])
+                        str::from_utf8(&row[column_info.offs..(column_info.offs + (n as usize))])
                             .unwrap()
                             .to_owned(),
                     ),
                 });
-
-                offs += size_of_type(data_type);
             }
 
             res.push(row_vals);
