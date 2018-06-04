@@ -55,15 +55,38 @@ impl CreateQuery {
     }
 }
 
+enum Relation {
+    Eq,
+}
+
+impl fmt::Debug for Relation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &self {
+            Relation::Eq => write!(f, "="),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FieldCondition {
+    field_name: String,
+    relation: Relation,
+}
+
 #[derive(Debug)]
 pub struct SelectQuery {
     pub table: String,
     pub columns: Vec<String>,
+    pub conditions: Vec<FieldCondition>,
 }
 
 impl SelectQuery {
     pub fn new(table: String, columns: Vec<String>) -> SelectQuery {
-        SelectQuery { table, columns }
+        SelectQuery {
+            table,
+            columns,
+            conditions: vec![],
+        }
     }
 }
 
