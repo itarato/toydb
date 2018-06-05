@@ -94,6 +94,6 @@ fn print_help() {
     println!("\tQUIT");
     println!("\tHELP");
     println!("\tCreate table: + TABLENAME (FIELDNAME TYPE)+");
-    println!("\tSelect query: ? (FIELD_NAME)+ > TABLENAME");
+    println!("\tSelect query: ? (FIELD_NAME)+ > TABLENAME (: (FIELD_NAME OP VALUE)+)");
     println!("\tInsert query: > TABLENAME (FIELD_NAME VALUE)+");
 }

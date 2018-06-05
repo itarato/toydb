@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt;
+use util;
 
 pub enum Query {
     Create(CreateQuery),
@@ -59,6 +60,15 @@ enum Relation {
     Eq,
 }
 
+impl Relation {
+    fn from(raw: String) -> Option<Relation> {
+        match &raw[..] {
+            "=" => Some(Relation::Eq),
+            _ => None,
+        }
+    }
+}
+
 impl fmt::Debug for Relation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
@@ -70,7 +80,18 @@ impl fmt::Debug for Relation {
 #[derive(Debug)]
 pub struct FieldCondition {
     field_name: String,
-    relation: Relation,
+    relation: String,
+    value: String,
+}
+
+impl FieldCondition {
+    fn new(field_name: String, relation: String, value: String) -> FieldCondition {
+        FieldCondition {
+            field_name,
+            relation,
+            value,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -81,11 +102,15 @@ pub struct SelectQuery {
 }
 
 impl SelectQuery {
-    pub fn new(table: String, columns: Vec<String>) -> SelectQuery {
+    pub fn new(
+        table: String,
+        columns: Vec<String>,
+        conditions: Vec<FieldCondition>,
+    ) -> SelectQuery {
         SelectQuery {
             table,
             columns,
-            conditions: vec![],
+            conditions,
         }
     }
 }
