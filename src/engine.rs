@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::str;
 use util;
 
+type Schema = HashMap<String, ColumnInfo>;
+
 #[derive(Debug)]
 struct ColumnInfo {
     name: String,
@@ -24,7 +26,7 @@ impl ColumnInfo {
 
 #[derive(Debug)]
 pub struct Database {
-    schema: HashMap<String, ColumnInfo>,
+    schema: Schema,
     data: Vec<Vec<u8>>,
 }
 
@@ -75,8 +77,8 @@ impl Database {
     }
 }
 
-fn restructure_field_def_list(field_defs: Vec<query::FieldDef>) -> HashMap<String, ColumnInfo> {
-    let mut schema: HashMap<String, ColumnInfo> = HashMap::new();
+fn restructure_field_def_list(field_defs: Vec<query::FieldDef>) -> Schema {
+    let mut schema: Schema = HashMap::new();
 
     let mut offs = 0_usize;
     for field_def in field_defs {
@@ -134,6 +136,23 @@ fn size_of_type(data_type: &query::Type) -> usize {
     }
 }
 
+fn are_conditions_passing(
+    row: &Vec<u8>,
+    schema: &Schema,
+    conditions: &Vec<query::FieldCondition>,
+) -> bool {
+    for condition in conditions {
+        let column_info = schema
+            .get(&condition.field_name[..])
+            .expect("Select condition has unknown field");
+
+        let relation = query::Relation::from(&condition.relation);
+        let value = util::Val::from(condition.value.clone(), &column_info.field_def.config);
+    }
+
+    true
+}
+
 #[derive(Debug, Default)]
 pub struct Engine {
     pub dbs: HashMap<String, Database>,
@@ -171,6 +190,10 @@ impl Engine {
         let mut res: Vec<Vec<util::Val>> = vec![];
 
         for row in &db.data {
+            if !are_conditions_passing(row, &db.schema, &query.conditions) {
+                continue;
+            }
+
             let mut row_vals: Vec<util::Val> = vec![];
 
             for column_name in &query.columns {

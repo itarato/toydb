@@ -99,20 +99,20 @@ fn parse_select(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
     assert_eq!(">", tokens.remove(0));
     let table = tokens.remove(0).to_owned();
 
+    let mut conditions: Vec<query::FieldCondition> = vec![];
     if tokens.len() > 0 {
         assert_eq!(":", tokens.remove(0));
 
         while tokens.len() > 0 {
-            let field_name = tokens.remove(0);
-            let op = tokens.remove(0);
-            let value_raw = tokens.remove(0);
+            let field_name = tokens.remove(0).to_owned();
+            let op_raw = tokens.remove(0).to_owned();
+            let value_raw = tokens.remove(0).to_owned();
+            conditions.push(query::FieldCondition::new(field_name, op_raw, value_raw));
         }
     }
 
     Ok(query::Query::Select(query::SelectQuery::new(
-        table,
-        columns,
-        vec![],
+        table, columns, conditions,
     )))
 }
 
