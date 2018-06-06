@@ -26,9 +26,9 @@ impl Repl {
     }
 
     pub fn start(&self) {
-        info!("REPL is on");
+        info!("REPL is listening");
 
-        print!("[DB> ");
+        print!("> ");
         let _ = io::stdout().flush();
 
         let mut command = String::new();
@@ -73,10 +73,10 @@ fn parse_command(command: &String) -> Result<Command, ()> {
     let slice: &str = &command[..];
 
     match &slice.trim().to_lowercase()[..] {
-        "q" | "quit" => {
+        "q" | "quit" | "exit" => {
             return Ok(Command::ReplCommand(ReplCommand::Quit));
         }
-        "h" | "help" => {
+        "h" | "?" | "help" => {
             return Ok(Command::ReplCommand(ReplCommand::Help));
         }
         _ => {}

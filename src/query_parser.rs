@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use util;
 
 #[derive(Debug, Default)]
 pub struct QueryParser;

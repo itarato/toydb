@@ -37,3 +37,13 @@ impl Val {
         Some(Val::Varchar(raw[0..(len as usize)].to_owned()))
     }
 }
+
+impl PartialEq for Val {
+    fn eq(&self, other: &Val) -> bool {
+        match (self, other) {
+            (Val::U32(l), Val::U32(r)) => l == r,
+            (Val::Varchar(l), Val::Varchar(r)) => l == r,
+            _ => false,
+        }
+    }
+}

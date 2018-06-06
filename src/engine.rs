@@ -4,6 +4,7 @@ use std::str;
 use util;
 
 type Schema = HashMap<String, ColumnInfo>;
+type Row = Vec<u8>;
 
 #[derive(Debug)]
 struct ColumnInfo {
@@ -27,7 +28,7 @@ impl ColumnInfo {
 #[derive(Debug)]
 pub struct Database {
     schema: Schema,
-    data: Vec<Vec<u8>>,
+    data: Vec<Row>,
 }
 
 impl Database {
@@ -40,7 +41,7 @@ impl Database {
 
     pub fn raw_insert(&mut self, raw_inserts: HashMap<String, String>) -> Result<(), ()> {
         let schema_size = self.schema_byte_size();
-        let mut row: Vec<u8> = vec![0; schema_size];
+        let mut row: Row = vec![0; schema_size];
 
         for (column_name, column_info) in &self.schema {
             match raw_inserts.get(&column_name[..]) {
@@ -94,7 +95,7 @@ fn restructure_field_def_list(field_defs: Vec<query::FieldDef>) -> Schema {
 }
 
 fn write_bytes(
-    buf: &mut Vec<u8>,
+    buf: &mut Row,
     len: usize,
     offs: usize,
     raw: &str,
@@ -137,7 +138,7 @@ fn size_of_type(data_type: &query::Type) -> usize {
 }
 
 fn are_conditions_passing(
-    row: &Vec<u8>,
+    row: &Row,
     schema: &Schema,
     conditions: &Vec<query::FieldCondition>,
 ) -> bool {
@@ -148,9 +149,47 @@ fn are_conditions_passing(
 
         let relation = query::Relation::from(&condition.relation);
         let value = util::Val::from(condition.value.clone(), &column_info.field_def.config);
+
+        if relation.is_none() || value.is_none() {
+            warn!("Condition cannot be parsed.");
+            return false;
+        }
+
+        let orig = extract_row_value(row, &column_info);
+        if orig.is_err() {
+            error!("Value cannot be extracted");
+            return false;
+        }
+
+        match relation.unwrap() {
+            query::Relation::Eq => {
+                if orig.unwrap() != value.unwrap() {
+                    return false;
+                }
+            }
+        }
     }
 
     true
+}
+
+fn extract_row_value(row: &Row, column_info: &ColumnInfo) -> Result<util::Val, ()> {
+    match column_info.field_def.config {
+        query::Type::Int => {
+            let mut val = 0_u32;
+
+            for i in 0..column_info.size {
+                val |= (row[column_info.offs + i] as u32) << (i * 8);
+            }
+
+            Ok(util::Val::U32(val))
+        }
+        query::Type::Varchar(n) => Ok(util::Val::Varchar(
+            str::from_utf8(&row[column_info.offs..(column_info.offs + (n as usize))])
+                .unwrap()
+                .to_owned(),
+        )),
+    }
 }
 
 #[derive(Debug, Default)]
