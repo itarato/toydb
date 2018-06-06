@@ -57,12 +57,16 @@ impl CreateQuery {
 
 pub enum Relation {
     Eq,
+    Lt,
+    Gt,
 }
 
 impl Relation {
     pub fn from(raw: &String) -> Option<Relation> {
         match &raw[..] {
             "=" => Some(Relation::Eq),
+            "<" => Some(Relation::Lt),
+            ">" => Some(Relation::Gt),
             _ => None,
         }
     }
@@ -72,6 +76,8 @@ impl fmt::Debug for Relation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
             Relation::Eq => write!(f, "="),
+            Relation::Lt => write!(f, "<"),
+            Relation::Gt => write!(f, ">"),
         }
     }
 }

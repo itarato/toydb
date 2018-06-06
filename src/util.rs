@@ -1,4 +1,5 @@
 use query;
+use std::cmp::Ordering;
 use std::fmt;
 
 pub enum Val {
@@ -44,6 +45,16 @@ impl PartialEq for Val {
             (Val::U32(l), Val::U32(r)) => l == r,
             (Val::Varchar(l), Val::Varchar(r)) => l == r,
             _ => false,
+        }
+    }
+}
+
+impl PartialOrd for Val {
+    fn partial_cmp(&self, other: &Val) -> Option<Ordering> {
+        match (self, other) {
+            (Val::U32(l), Val::U32(r)) => Some(l.cmp(r)),
+            (Val::Varchar(l), Val::Varchar(r)) => Some(l.cmp(r)),
+            _ => None,
         }
     }
 }

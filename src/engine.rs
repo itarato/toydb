@@ -167,6 +167,16 @@ fn are_conditions_passing(
                     return false;
                 }
             }
+            query::Relation::Lt => {
+                if !(orig.unwrap() < value.unwrap()) {
+                    return false;
+                }
+            }
+            query::Relation::Gt => {
+                if !(orig.unwrap() > value.unwrap()) {
+                    return false;
+                }
+            }
         }
     }
 
