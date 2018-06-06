@@ -1,0 +1,9 @@
++ users id int name varchar 255 age int
++ booking id int user_id int book varchar 255
+
+> users id 0 name Steve age 30
+> users id 1 name John age 26
+> users id 2 name Maya age 89
+
+> booking id 0 user_id 1 book WarOfWorlds
+> booking id 1 user_id 1 book Sparta
