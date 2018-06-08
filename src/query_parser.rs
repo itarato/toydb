@@ -17,6 +17,9 @@ impl QueryParser {
         if slice.to_lowercase().starts_with(">") {
             return true;
         }
+        if slice.to_lowercase().starts_with(":") {
+            return true;
+        }
 
         return false;
     }
@@ -32,6 +35,7 @@ impl QueryParser {
             "+" => parse_create_table(&mut tokens),
             "?" => parse_select(&mut tokens),
             ">" => parse_insert(&mut tokens),
+            ":db" => Ok(query::Query::Describe(query::DescribeQuery)),
             _ => {
                 error!("Unknown query: {:#?}", raw);
                 return Err(());

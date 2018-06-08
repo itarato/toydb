@@ -5,6 +5,7 @@ pub enum Query {
     Create(CreateQuery),
     Select(SelectQuery),
     Insert(InsertQuery),
+    Describe(DescribeQuery),
 }
 
 impl fmt::Debug for Query {
@@ -13,6 +14,7 @@ impl fmt::Debug for Query {
             Query::Create(q) => write!(f, "Create query [{:#?}]", q),
             Query::Select(q) => write!(f, "Select query [{:#?}]", q),
             Query::Insert(q) => write!(f, "Insert query [{:#?}]", q),
+            Query::Describe(q) => write!(f, "Describe [{:#?}]", q),
         }
     }
 }
@@ -134,3 +136,6 @@ impl InsertQuery {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct DescribeQuery;

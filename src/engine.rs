@@ -277,4 +277,13 @@ impl Engine {
 
         Ok(res)
     }
+
+    pub fn describe_db(&self) {
+        for (name, db) in &self.dbs {
+            println!("{}", name);
+            for (column_name, column_info) in &db.schema {
+                println!("\t{:12} : {:?}", column_name, column_info);
+            }
+        }
+    }
 }

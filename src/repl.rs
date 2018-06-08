@@ -129,4 +129,5 @@ fn print_help() {
     println!("\tCreate table: + TABLENAME (FIELDNAME TYPE)+");
     println!("\tSelect query: ? (FIELD_NAME)+ > TABLENAME (: (FIELD_NAME OP VALUE)+)");
     println!("\tInsert query: > TABLENAME (FIELD_NAME VALUE)+");
+    println!("\tDescribe database: :db");
 }

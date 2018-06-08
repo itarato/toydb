@@ -22,6 +22,9 @@ impl EngineOperator {
             query::Query::Insert(q) => {
                 let _ = self.engine.insert(q);
             }
+            query::Query::Describe(q) => {
+                self.engine.describe_db();
+            }
         }
     }
 }
