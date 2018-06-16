@@ -1,8 +1,10 @@
 [package]
-name = "db"
+name = "toydb"
 version = "0.1.0"
 authors = ["Peter Arato <it.arato@gmail.com>"]
 
 [dependencies]
 log = "0.4.1"
 env_logger = "0.5.10"
+hyper = "0.12.1"
+futures = "0.1"
