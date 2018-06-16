@@ -1,6 +1,5 @@
-use engine_operator;
+use dbclient;
 use query_parser;
-use std::cell::RefCell;
 use std::fs::File;
 use std::io::{self, prelude::*, Write};
 
@@ -21,8 +20,7 @@ enum ReplResponseAction {
 
 #[derive(Debug, Default)]
 pub struct Repl {
-    query_parser: query_parser::QueryParser,
-    engine_operator: RefCell<engine_operator::EngineOperator>,
+    client: dbclient::DBClient,
 }
 
 impl Repl {
@@ -88,10 +86,11 @@ impl Repl {
                 }
             },
             Ok(Command::DBCommand(db_command)) => {
-                let query = self.query_parser.parse(&db_command);
-                info!("Got DB Query: {:#?}", query);
+                self.client.send(&db_command);
+                // let query = self.query_parser.parse(&db_command);
+                // info!("Got DB Query: {:#?}", query);
 
-                self.engine_operator.borrow_mut().execute(query.unwrap());
+                // self.engine_operator.borrow_mut().execute(query.unwrap());
             }
             Err(_) => {
                 info!("Command [{:#?}] not known. Try again.", command);
