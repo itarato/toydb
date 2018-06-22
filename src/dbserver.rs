@@ -48,7 +48,7 @@ impl DBServer {
       .map(|l| l.trim())
       .filter(|l| l.len() > 0)
       .for_each(|l| {
-        execute_raw_command(
+        let _ = execute_raw_command(
           &l.to_owned(),
           self.engine_operator.clone(),
           self.query_parser.clone(),
@@ -64,14 +64,14 @@ fn execute_raw_command(
   raw: &String,
   engine_operator: Arc<Mutex<engine_operator::EngineOperator>>,
   query_parser: Arc<query_parser::QueryParser>,
-) {
+) -> Result<String, ()> {
   match query_parser.parse(&raw) {
     Ok(query) => {
       let mut engine_operator = engine_operator.lock().unwrap();
-      engine_operator.execute(query);
+      engine_operator.execute(query)
     }
-    Err(_) => {}
-  };
+    Err(_) => Err(()),
+  }
 }
 
 fn prepare_response(
@@ -84,9 +84,10 @@ fn prepare_response(
       let fut = req.into_body().concat2().and_then(move |chunk| {
         let value = str::from_utf8(chunk.as_ref()).unwrap().to_owned();
 
-        execute_raw_command(&value, engine_operator, query_parser);
-
-        future::ok(Response::new(Body::empty()))
+        match execute_raw_command(&value, engine_operator, query_parser) {
+          Ok(s) => future::ok(Response::new(Body::from(s))),
+          Err(_) => future::ok(Response::new(Body::empty())),
+        }
       });
       Box::new(fut)
     }

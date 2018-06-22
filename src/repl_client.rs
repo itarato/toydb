@@ -11,10 +11,6 @@ mod repl;
 
 fn main() {
   env_logger::init();
-
   info!("DB is starting");
-
-  let repl = repl::Repl::new();
-
-  repl.start();
+  repl::Repl::new().start();
 }

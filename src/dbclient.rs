@@ -5,6 +5,7 @@ use futures::{Future, Stream};
 use hyper::header::HeaderValue;
 use hyper::rt::{lazy, run};
 use hyper::{self, Body, Client, Method, Request};
+use std::str;
 
 impl DBClient {
   pub fn send(&self, raw: &String) {
@@ -20,7 +21,10 @@ impl DBClient {
       Client::new()
         .request(req)
         .and_then(|res| res.into_body().concat2())
-        .map(|_| ())
+        .map(|chunk| {
+          println!("{:#?}", str::from_utf8(chunk.as_ref()).unwrap());
+          ()
+        })
         .map_err(|_| ())
     }));
   }
