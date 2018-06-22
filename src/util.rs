@@ -2,6 +2,8 @@ use query;
 use std::cmp::Ordering;
 use std::fmt;
 
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type", content = "val")]
 pub enum Val {
     U32(u32),
     Varchar(String),

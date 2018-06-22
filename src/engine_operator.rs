@@ -1,5 +1,6 @@
 use engine;
 use query;
+use serde_json;
 
 #[derive(Default, Debug)]
 pub struct EngineOperator {
@@ -17,12 +18,16 @@ impl EngineOperator {
             query::Query::Select(q) => {
                 info!("Exec query {:#?}", q);
                 let res = self.engine.select(q);
-                println!("{:#?}", res);
+
+                if let Ok(res) = res {
+                    let res = serde_json::to_string(&res).unwrap();
+                    println!("{:#?}", res);
+                }
             }
             query::Query::Insert(q) => {
                 let _ = self.engine.insert(q);
             }
-            query::Query::Describe(q) => {
+            query::Query::Describe(_) => {
                 self.engine.describe_db();
             }
         }
