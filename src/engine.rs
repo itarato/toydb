@@ -264,11 +264,18 @@ impl Engine {
 
                         util::Val::U32(val)
                     }
-                    query::Type::Varchar(n) => util::Val::Varchar(
-                        str::from_utf8(&row[column_info.offs..(column_info.offs + (n as usize))])
-                            .unwrap()
-                            .to_owned(),
-                    ),
+                    query::Type::Varchar(n) => {
+                        let slice = str::from_utf8(
+                            &row[column_info.offs..(column_info.offs + (n as usize))],
+                        ).unwrap();
+
+                        let slice = match slice.find('\0') {
+                            Some(n) => slice[0..n].to_owned(),
+                            None => slice.to_owned(),
+                        };
+
+                        util::Val::Varchar(slice)
+                    }
                 });
             }
 
