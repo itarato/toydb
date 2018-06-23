@@ -21,8 +21,8 @@ impl fmt::Debug for Val {
 impl Val {
     pub fn from(raw: String, data_type: &query::Type) -> Option<Val> {
         match data_type {
-            query::Type::Int => Val::wrap_raw_int(raw),
-            query::Type::Varchar(n) => Val::wrap_raw_varchar(raw, *n),
+            &query::Type::Int => Val::wrap_raw_int(raw),
+            &query::Type::Varchar(n) => Val::wrap_raw_varchar(raw, n),
         }
     }
 

@@ -26,9 +26,9 @@ pub enum Type {
 
 impl fmt::Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            Type::Int => write!(f, "Int"),
-            Type::Varchar(n) => write!(f, "Varchar of size {}", n),
+        match self {
+            &Type::Int => write!(f, "Int"),
+            &Type::Varchar(n) => write!(f, "Varchar of size {}", n),
         }
     }
 }
@@ -76,10 +76,10 @@ impl Relation {
 
 impl fmt::Debug for Relation {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            Relation::Eq => write!(f, "="),
-            Relation::Lt => write!(f, "<"),
-            Relation::Gt => write!(f, ">"),
+        match self {
+            &Relation::Eq => write!(f, "="),
+            &Relation::Lt => write!(f, "<"),
+            &Relation::Gt => write!(f, ">"),
         }
     }
 }
