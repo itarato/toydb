@@ -20,21 +20,19 @@ impl EngineOperator {
                 info!("Exec query {:#?}", q);
                 let res = self.engine.select(q);
 
-                if let Ok(res) = res {
-                    let res = serde_json::to_string(&res).unwrap();
+                if res.is_ok() {
+                    let res = serde_json::to_string(&res.unwrap()).unwrap();
                     println!("{:#?}", &res);
-                    return Ok(res);
+                    Ok(res)
+                } else {
+                    Err(())
                 }
-                Err(())
             }
             query::Query::Insert(q) => {
                 let _ = self.engine.insert(q);
                 Ok("".to_owned())
             }
-            query::Query::Describe(_) => {
-                self.engine.describe_db();
-                Ok("".to_owned())
-            }
+            query::Query::Describe(_) => Ok(self.engine.describe_db()),
         }
     }
 }

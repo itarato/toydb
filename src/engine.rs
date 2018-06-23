@@ -1,6 +1,6 @@
 use query;
 use std::collections::HashMap;
-use std::str;
+use std::{fmt, str};
 use util;
 
 type Schema = HashMap<String, ColumnInfo>;
@@ -285,12 +285,16 @@ impl Engine {
         Ok(res)
     }
 
-    pub fn describe_db(&self) {
+    pub fn describe_db(&self) -> String {
+        let mut out = String::new();
+
         for (name, db) in &self.dbs {
-            println!("{}", name);
+            out.push_str(format!("{}\n", name).as_str());
             for (column_name, column_info) in &db.schema {
-                println!("\t{:12} : {:?}", column_name, column_info);
+                out.push_str(format!("\t{:12} : {:?}\n", column_name, column_info).as_str());
             }
         }
+
+        out
     }
 }

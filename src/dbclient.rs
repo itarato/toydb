@@ -22,7 +22,7 @@ impl DBClient {
         .request(req)
         .and_then(|res| res.into_body().concat2())
         .map(|chunk| {
-          println!("{:#?}", str::from_utf8(chunk.as_ref()).unwrap());
+          println!("{}", str::from_utf8(chunk.as_ref()).unwrap());
           ()
         })
         .map_err(|_| ())
