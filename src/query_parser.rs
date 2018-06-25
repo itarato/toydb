@@ -57,6 +57,11 @@ fn parse_create_table(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
     let mut fields: Vec<query::FieldDef> = vec![];
 
     while tokens.len() > 0 {
+        // Indices are next.
+        if tokens[0] == ":" {
+            break;
+        }
+
         assert!(tokens.len() >= 2);
         let field_name = tokens.remove(0);
         let type_name = tokens.remove(0);
@@ -82,9 +87,21 @@ fn parse_create_table(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
         fields.push(query::FieldDef::new(field_name.to_owned(), data_type));
     }
 
+    let mut indices: Vec<String> = vec![];
+
+    if tokens.len() > 0 {
+        assert_eq!(":", tokens.remove(0));
+
+        // @TODO Must be some kind of unrolling.
+        while tokens.len() > 0 {
+            indices.push(tokens.remove(0).to_owned());
+        }
+    }
+
     Ok(query::Query::Create(query::CreateQuery::new(
         table_name.to_owned(),
         fields,
+        indices,
     )))
 }
 

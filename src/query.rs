@@ -49,11 +49,12 @@ impl FieldDef {
 pub struct CreateQuery {
     pub table: String,
     pub fields: Vec<FieldDef>,
+    pub indices: Vec<String>,
 }
 
 impl CreateQuery {
-    pub fn new(table: String, fields: Vec<FieldDef>) -> CreateQuery {
-        CreateQuery { table, fields }
+    pub fn new(table: String, fields: Vec<FieldDef>, indices: Vec<String>) -> CreateQuery {
+        CreateQuery { table, fields, indices }
     }
 }
 

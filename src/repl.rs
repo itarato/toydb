@@ -101,7 +101,7 @@ fn print_help() {
     println!("Command list:");
     println!("\tQUIT");
     println!("\tHELP");
-    println!("\tCreate table: + TABLENAME (FIELDNAME TYPE)+");
+    println!("\tCreate table: + TABLENAME (FIELDNAME TYPE)+ (: (INDICES)+)");
     println!("\tSelect query: ? (FIELD_NAME)+ > TABLENAME (: (FIELD_NAME OP VALUE)+)");
     println!("\tInsert query: > TABLENAME (FIELD_NAME VALUE)+");
     println!("\tDescribe database: :db");
