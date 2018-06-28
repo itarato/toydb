@@ -26,14 +26,14 @@ impl ColumnInfo {
 }
 
 #[derive(Debug)]
-pub struct Database {
+pub struct Table {
     schema: Schema,
     data: Vec<Row>,
 }
 
-impl Database {
-    pub fn new(schema: Vec<query::FieldDef>) -> Database {
-        Database {
+impl Table {
+    pub fn new(schema: Vec<query::FieldDef>) -> Table {
+        Table {
             schema: restructure_field_def_list(schema),
             data: vec![],
         }
@@ -204,12 +204,12 @@ fn extract_row_value(row: &Row, column_info: &ColumnInfo) -> Result<util::Val, (
 
 #[derive(Debug, Default)]
 pub struct Engine {
-    pub dbs: HashMap<String, Database>,
+    pub dbs: HashMap<String, Table>,
 }
 
 impl Engine {
     pub fn create_table(&mut self, q: query::CreateQuery) -> Result<(), ()> {
-        self.dbs.insert(q.table, Database::new(q.fields));
+        self.dbs.insert(q.table, Table::new(q.fields));
         Ok(())
     }
 
