@@ -1,7 +1,8 @@
 use query;
-use std::collections::HashMap;
 use std::{fmt, str};
+use std::collections::HashMap;
 use util;
+use index;
 
 type Schema = HashMap<String, ColumnInfo>;
 type Row = Vec<u8>;
@@ -29,6 +30,7 @@ impl ColumnInfo {
 pub struct Table {
     schema: Schema,
     data: Vec<Row>,
+    index: index::BasicIndex<i32>,
 }
 
 impl Table {
@@ -36,6 +38,7 @@ impl Table {
         Table {
             schema: restructure_field_def_list(schema),
             data: vec![],
+            index: index::BasicIndex::<i32>::new(),
         }
     }
 
