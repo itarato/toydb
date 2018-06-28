@@ -14,6 +14,7 @@ mod engine_operator;
 mod query;
 mod query_parser;
 mod util;
+mod index;
 
 use std::env;
 

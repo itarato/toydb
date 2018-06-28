@@ -50,8 +50,12 @@ fn tokenize(raw: &String) -> Vec<&str> {
 }
 
 fn parse_create_table(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
-    assert!(tokens.len() >= 4);
-    assert_eq!("+", tokens.remove(0));
+    if tokens.len() < 4 {
+        return Err(());
+    }
+    if "+" != tokens.remove(0) {
+        return Err(());
+    }
 
     let table_name = tokens.remove(0);
     let mut fields: Vec<query::FieldDef> = vec![];
@@ -62,13 +66,20 @@ fn parse_create_table(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
             break;
         }
 
-        assert!(tokens.len() >= 2);
+        if tokens.len() < 2 {
+            return Err(());
+        }
+
         let field_name = tokens.remove(0);
         let type_name = tokens.remove(0);
 
         let data_type: query::Type = match &type_name {
             &"int" => query::Type::Int,
             &"varchar" => {
+                if tokens.len() < 1 {
+                    return Err(());
+                }
+
                 let size: u8 = match u8::from_str_radix(tokens.remove(0), 10) {
                     Ok(n) => n,
                     Err(e) => {
@@ -90,7 +101,10 @@ fn parse_create_table(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
     let mut indices: Vec<String> = vec![];
 
     if tokens.len() > 0 {
-        assert_eq!(":", tokens.remove(0));
+        if ":" != tokens.remove(0) {
+            error!("Index token ':' must follow field list.");
+            return Err(());
+        }
 
         // @TODO Must be some kind of unrolling.
         while tokens.len() > 0 {
@@ -151,4 +165,68 @@ fn parse_insert(tokens: &mut Vec<&str>) -> Result<query::Query, ()> {
         table_name,
         raw_inserts,
     )))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use query;
+
+    #[test]
+    fn test_parse_create_table_fails_without_fields() {
+        assert!(parse_create_table(&mut vec![">", "users"]).is_err());
+    }
+
+    #[test]
+    fn test_parse_create_table_fails_if_start_token_different() {
+        assert!(parse_create_table(&mut vec![">", "users", "id", "int"]).is_err());
+        assert!(parse_create_table(&mut vec!["?", "users", "id", "int"]).is_err());
+        assert!(parse_create_table(&mut vec![":", "users", "id", "int"]).is_err());
+    }
+
+    #[test]
+    fn test_parse_create_table_fails_if_type_not_known() {
+        assert!(parse_create_table(&mut vec!["+", "users", "id", "float"]).is_err());
+        assert!(parse_create_table(&mut vec!["+", "users", "id", "index"]).is_err());
+    }
+
+    #[test]
+    fn test_parse_create_table_fails_if_varchar_does_not_have_size() {
+        assert!(parse_create_table(&mut vec!["+", "users", "name", "varchar"]).is_err());
+    }
+
+    #[test]
+    fn test_parse_create_table_fails_if_varchar_size_is_not_int() {
+        assert!(parse_create_table(&mut vec!["+", "users", "name", "varchar", "large"]).is_err());
+    }
+
+    #[test]
+    fn test_parse_create_table_simple() {
+        let res = parse_create_table(&mut vec!["+", "users", "id", "int", "name", "varchar", "30"]);
+        assert!(res.is_ok());
+
+        if let query::Query::Create(query) = res.unwrap() {
+            assert_eq!("users", query.table);
+            assert_eq!("id", query.fields[0].name);
+            assert_eq!(query::Type::Int, query.fields[0].config);
+            assert_eq!("name", query.fields[1].name);
+            assert_eq!(query::Type::Varchar(30), query.fields[1].config);
+        } else {
+            panic!("Query is not create query.");
+        }
+    }
+
+    #[test]
+    fn test_parse_create_table_with_indices() {
+        let res = parse_create_table(&mut vec!["+", "users", "id", "int", "age", "int", ":", "id", "age"]);
+        assert!(res.is_ok());
+
+        if let query::Query::Create(query) = res.unwrap() {
+            assert_eq!(2, query.indices.len());
+            assert_eq!("id", query.indices[0]);
+            assert_eq!("age", query.indices[1]);
+        } else {
+            panic!("Query is not create query.");
+        }
+    }
 }

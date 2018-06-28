@@ -19,6 +19,7 @@ impl fmt::Debug for Query {
     }
 }
 
+#[derive(PartialEq)]
 pub enum Type {
     Int,
     Varchar(u8),
