@@ -3,6 +3,12 @@ use std::{fmt, str};
 use std::collections::HashMap;
 use util;
 use index;
+use std::cmp::Eq;
+use std::hash::Hash;
+use std::fmt::Debug;
+use std::any::Any;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 type Schema = HashMap<String, ColumnInfo>;
 type Row = Vec<u8>;
@@ -30,7 +36,7 @@ impl ColumnInfo {
 pub struct Table {
     schema: Schema,
     data: Vec<Row>,
-    index: index::BasicIndex<i32>,
+    index: HashMap<String, index::BasicIndex>,
 }
 
 impl Table {
@@ -38,7 +44,7 @@ impl Table {
         Table {
             schema: restructure_field_def_list(schema),
             data: vec![],
-            index: index::BasicIndex::<i32>::new(),
+            index: HashMap::new(),
         }
     }
 

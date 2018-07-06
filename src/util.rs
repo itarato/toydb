@@ -1,8 +1,9 @@
 use query;
 use std::cmp::Ordering;
 use std::fmt;
+use std::hash::Hash;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Eq, Hash)]
 #[serde(tag = "type", content = "val")]
 pub enum Val {
     U32(u32),
