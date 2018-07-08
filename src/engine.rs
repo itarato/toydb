@@ -30,15 +30,18 @@ impl ColumnInfo {
 pub struct Table<T: index::Index = index::BasicIndex> {
     schema: Schema,
     data: Vec<Row>,
-    index: HashMap<String, T>,
+    indices: HashMap<String, T>,
 }
 
-impl<T: index::Index> Table<T> {
-    pub fn new(schema: Vec<query::FieldDef>) -> Table<T> {
+impl<T: index::Index + Default> Table<T> {
+    pub fn new(schema: Vec<query::FieldDef>, index_fields: Vec<String>) -> Table<T> {
+        let mut indices: HashMap<String, T> = Default::default();
+        index_fields.iter().for_each(|field| { indices.insert(field.to_string(), Default::default()); });
+
         Table {
             schema: restructure_field_def_list(schema),
             data: vec![],
-            index: Default::default(),
+            indices,
         }
     }
 
@@ -205,7 +208,7 @@ pub struct Engine {
 
 impl Engine {
     pub fn create_table(&mut self, q: query::CreateQuery) -> Result<(), ()> {
-        self.dbs.insert(q.table, Table::new(q.fields));
+        self.dbs.insert(q.table, Table::new(q.fields, q.indices));
         Ok(())
     }
 
@@ -288,6 +291,9 @@ impl Engine {
             out.push_str(format!("{}\n", name).as_str());
             for (column_name, column_info) in &db.schema {
                 out.push_str(format!("\t{:12} : {:?}\n", column_name, column_info).as_str());
+            }
+            for index_field in db.indices.keys() {
+                out.push_str(format!("\tIndex on: {:12}", index_field).as_str());
             }
         }
 

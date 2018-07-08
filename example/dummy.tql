@@ -1,4 +1,4 @@
-+ users id int name varchar 255 age int
++ users id int name varchar 255 age int : id
 + booking id int user_id int book varchar 255
 
 > users id 0 name Steve age 30
