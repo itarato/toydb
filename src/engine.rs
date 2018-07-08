@@ -1,14 +1,8 @@
 use query;
-use std::{fmt, str};
+use std::{str};
 use std::collections::HashMap;
 use util;
 use index;
-use std::cmp::Eq;
-use std::hash::Hash;
-use std::fmt::Debug;
-use std::any::Any;
-use std::sync::Arc;
-use std::sync::Mutex;
 
 type Schema = HashMap<String, ColumnInfo>;
 type Row = Vec<u8>;
@@ -33,18 +27,18 @@ impl ColumnInfo {
 }
 
 #[derive(Debug)]
-pub struct Table {
+pub struct Table<T: index::Index = index::BasicIndex> {
     schema: Schema,
     data: Vec<Row>,
-    index: HashMap<String, index::BasicIndex>,
+    index: HashMap<String, T>,
 }
 
-impl Table {
-    pub fn new(schema: Vec<query::FieldDef>) -> Table {
+impl<T: index::Index> Table<T> {
+    pub fn new(schema: Vec<query::FieldDef>) -> Table<T> {
         Table {
             schema: restructure_field_def_list(schema),
             data: vec![],
-            index: HashMap::new(),
+            index: Default::default(),
         }
     }
 
@@ -75,15 +69,8 @@ impl Table {
         Ok(())
     }
 
-    // @todo There is a better way to do this.
     fn schema_byte_size(&self) -> usize {
-        let mut size = 0_usize;
-
-        for (_, column_info) in &self.schema {
-            size += column_info.size;
-        }
-
-        size
+        self.schema.iter().fold(0_usize, |acc, (_, elem)| acc + elem.size)
     }
 }
 
