@@ -69,11 +69,30 @@ impl<T: index::Index + Default> Table<T> {
 
         self.data.push(row);
 
+        let position: usize = self.data.len() - 1;
+        for (index_field, index) in &mut self.indices {
+            if raw_inserts.contains_key(index_field) {
+                let data_type = &self.schema.get(index_field).unwrap().field_def.config;
+                let val = raw_string_to_val(raw_inserts.get(index_field).unwrap(), data_type).unwrap();
+                index.insert(val, position);
+            }
+        }
+
         Ok(())
     }
 
     fn schema_byte_size(&self) -> usize {
         self.schema.iter().fold(0_usize, |acc, (_, elem)| acc + elem.size)
+    }
+}
+
+fn raw_string_to_val(raw: &str, data_type: &query::Type) -> Result<util::Val, ()> {
+    match data_type {
+        &query::Type::Int => match u32::from_str_radix(raw, 10) {
+            Ok(n) => Ok(util::Val::U32(n)),
+            Err(_) => Err(())
+        }
+        &query::Type::Varchar(len) => Ok(util::Val::Varchar((&raw[0..len as usize]).to_owned()))
     }
 }
 
@@ -203,19 +222,19 @@ fn extract_row_value(row: &Row, column_info: &ColumnInfo) -> Result<util::Val, (
 
 #[derive(Debug, Default)]
 pub struct Engine {
-    pub dbs: HashMap<String, Table>,
+    pub tables: HashMap<String, Table>,
 }
 
 impl Engine {
     pub fn create_table(&mut self, q: query::CreateQuery) -> Result<(), ()> {
-        self.dbs.insert(q.table, Table::new(q.fields, q.indices));
+        self.tables.insert(q.table, Table::new(q.fields, q.indices));
         Ok(())
     }
 
     pub fn insert(&mut self, query: query::InsertQuery) -> Result<(), ()> {
-        match self.dbs.get_mut(&query.table_name[..]) {
-            Some(db) => {
-                let _ = db.raw_insert(query.raw_inserts);
+        match self.tables.get_mut(&query.table_name[..]) {
+            Some(table) => {
+                let _ = table.raw_insert(query.raw_inserts);
             }
             None => {
                 error!("Missing table: {}", query.table_name);
@@ -227,7 +246,7 @@ impl Engine {
     }
 
     pub fn select(&self, query: query::SelectQuery) -> Result<Vec<Vec<util::Val>>, ()> {
-        let db = match self.dbs.get(&query.table[..]) {
+        let db = match self.tables.get(&query.table[..]) {
             Some(db) => db,
             None => {
                 warn!("No table: {}", &query.table);
@@ -287,7 +306,7 @@ impl Engine {
     pub fn describe_db(&self) -> String {
         let mut out = String::new();
 
-        for (name, db) in &self.dbs {
+        for (name, db) in &self.tables {
             out.push_str(format!("{}\n", name).as_str());
             for (column_name, column_info) in &db.schema {
                 out.push_str(format!("\t{:12} : {:?}\n", column_name, column_info).as_str());
