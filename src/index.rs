@@ -25,21 +25,29 @@ impl Index for BasicIndex {
 
 #[cfg(test)]
 mod test {
-//    use super::*;
-//
-//    #[test]
-//    fn test_basic_index_returns_pos() {
-//        let mut bi: BasicIndex = Default::default();
-//        bi.insert(util::Val::U32(21), 40);
-//        bi.insert(util::Val::U32(32), 30);
-//        assert_eq!(Some(&40usize), bi.get_pos(util::Val::U32(21)));
-//        assert_eq!(Some(&30usize), bi.get_pos(util::Val::U32(32)));
-//    }
-//
-//    #[test]
-//    fn test_basic_index_return_none_for_missing_key() {
-//        let mut bi: BasicIndex = Default::default();
-//        bi.insert(util::Val::U32(21), 40);
-//        assert_eq!(None, bi.get_pos(util::Val::U32(20)));
-//    }
+    use super::*;
+
+    #[test]
+    fn test_basic_index_returns_pos() {
+        let mut bi: BasicIndex = Default::default();
+        bi.insert(util::Val::U32(21), 40);
+        bi.insert(util::Val::U32(32), 30);
+        assert_eq!(Some(&vec![40usize]), bi.get_pos(util::Val::U32(21)));
+        assert_eq!(Some(&vec![30usize]), bi.get_pos(util::Val::U32(32)));
+    }
+
+    #[test]
+    fn test_basic_index_return_none_for_missing_key() {
+        let mut bi: BasicIndex = Default::default();
+        bi.insert(util::Val::U32(21), 40);
+        assert_eq!(None, bi.get_pos(util::Val::U32(20)));
+    }
+
+    #[test]
+    fn test_basic_index_return_more_than_one_position() {
+        let mut bi: BasicIndex = Default::default();
+        bi.insert(util::Val::U32(21), 40);
+        bi.insert(util::Val::U32(21), 30);
+        assert_eq!(Some(&vec![40usize, 30usize]), bi.get_pos(util::Val::U32(21)));
+    }
 }
