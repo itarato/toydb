@@ -45,6 +45,7 @@ mod test {
 
     #[test]
     fn test_basic_index_return_more_than_one_position() {
+
         let mut bi: BasicIndex = Default::default();
         bi.insert(util::Val::U32(21), 40);
         bi.insert(util::Val::U32(21), 30);

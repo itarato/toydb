@@ -22,7 +22,6 @@ impl EngineOperator {
 
                 if res.is_ok() {
                     let res = serde_json::to_string(&res.unwrap()).unwrap();
-                    println!("{:#?}", &res);
                     Ok(res)
                 } else {
                     Err(())

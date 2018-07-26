@@ -50,7 +50,7 @@ impl<T: index::Index + Default> Table<T> {
         let mut row: Row = vec![0; schema_size];
 
         for (column_name, column_info) in &self.schema {
-            match raw_inserts.get(&column_name[..]) {
+            let raw_val = match raw_inserts.get(&column_name[..]) {
                 Some(raw) => {
                     let _ = write_bytes(
                         &mut row,
@@ -62,9 +62,17 @@ impl<T: index::Index + Default> Table<T> {
                         warn!("Data write error");
                         Err(e)
                     });
+                    raw
                 }
-                None => {}
+                None => ""
             };
+
+            if self.indices.contains_key(column_name) {
+                let real_val = raw_string_to_val(raw_val, &self.schema.get(column_name).unwrap().field_def.config);
+                let mut index = self.indices.get_mut(column_name).unwrap();
+
+                index.insert(real_val.unwrap(), self.data.len());
+            }
         }
 
         self.data.push(row);
@@ -92,7 +100,7 @@ fn raw_string_to_val(raw: &str, data_type: &query::Type) -> Result<util::Val, ()
             Ok(n) => Ok(util::Val::U32(n)),
             Err(_) => Err(())
         }
-        &query::Type::Varchar(len) => Ok(util::Val::Varchar((&raw[0..len as usize]).to_owned()))
+        &query::Type::Varchar(len) => Ok(util::Val::Varchar((&raw[0..usize::min(len as usize, raw.len())]).to_owned()))
     }
 }
 
@@ -317,5 +325,36 @@ impl Engine {
         }
 
         out
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_raw_string_to_val_u32() {
+        assert_eq!(Ok(util::Val::U32(12)), raw_string_to_val("12", &query::Type::Int));
+        assert_eq!(Ok(util::Val::U32(0)), raw_string_to_val("0", &query::Type::Int));
+    }
+
+    #[test]
+    fn test_raw_string_to_val_u32_fail() {
+        assert_eq!(Err(()), raw_string_to_val("", &query::Type::Int));
+        assert_eq!(Err(()), raw_string_to_val("-1", &query::Type::Int));
+        assert_eq!(Err(()), raw_string_to_val("abc", &query::Type::Int));
+    }
+
+    #[test]
+    fn test_raw_string_to_val_varchar() {
+        assert_eq!(Ok(util::Val::Varchar("hello".to_owned())), raw_string_to_val("hello", &query::Type::Varchar(5)));
+        assert_eq!(Ok(util::Val::Varchar("123".to_owned())), raw_string_to_val("123", &query::Type::Varchar(3)));
+        assert_eq!(Ok(util::Val::Varchar("".to_owned())), raw_string_to_val("", &query::Type::Varchar(0)));
+    }
+
+    #[test]
+    fn test_raw_string_to_val_varchar_different_size() {
+        assert_eq!(Ok(util::Val::Varchar("hel".to_owned())), raw_string_to_val("hello world", &query::Type::Varchar(3)));
+        assert_eq!(Ok(util::Val::Varchar("hello".to_owned())), raw_string_to_val("hello", &query::Type::Varchar(7)));
     }
 }
