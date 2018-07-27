@@ -7,6 +7,9 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate clap;
+#[macro_use]
+extern crate lazy_static;
 
 mod dbserver;
 mod engine;
@@ -16,18 +19,44 @@ mod query_parser;
 mod util;
 mod index;
 
-use std::env;
+use clap::{Arg, App};
+use std::sync::Mutex;
+use std::cell::Cell;
+
+lazy_static! {
+    static ref IS_VERBOSE: Mutex<Cell<bool>> = Mutex::new(Cell::new(false));
+}
+
+fn is_verbose() -> bool {
+    IS_VERBOSE.lock().unwrap().get()
+}
 
 fn main() {
     env_logger::init();
 
+    let matches = App::new("ToyDB")
+        .version("0.1")
+        .author("Peter Arato <it.arato@gmail.com>")
+        .arg(Arg::with_name("dump")
+            .short("d")
+            .long("dump")
+            .value_name("DUMP")
+            .help("Database dump to start with")
+            .takes_value(true))
+        .arg(Arg::with_name("v")
+            .short("v")
+            .help("Verbose mode"))
+        .get_matches();
+
+    IS_VERBOSE.lock().unwrap().set(matches.is_present("v"));
+
     info!("DB is starting");
 
-    let dbs = dbserver::DBServer::new();
+    let dbs: dbserver::DBServer = Default::default();
 
-    if let Some(file_name) = env::args().nth(1) {
+    if let Some(file_name) = matches.value_of("DUMP") {
         info!("Got file-argument: {}", file_name);
-        let _ = dbs.read_file(&file_name);
+        let _ = dbs.read_file(&file_name.to_owned());
     }
 
     dbs.run();

@@ -61,7 +61,3 @@ impl PartialOrd for Val {
         }
     }
 }
-
-pub trait VerboseMode {
-    fn is_verbose(&self) -> bool;
-}
