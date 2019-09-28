@@ -5,13 +5,13 @@
 Starting the server:
 
 ```
-cargo run --bin server
+cargo run --bin server -- [-d DUMP_TQL_FILE] [-v] [-V] [--help]
 ```
 
 Starting the client:
 
 ```
-cargo run --bin client [DUMP-TQL-FILE]
+cargo run --bin client
 ```
 
 ## Toy Query Language (TQL)
@@ -36,4 +36,6 @@ Example:
 
 > booking id 0 user_id 1 book WarOfWorlds
 > booking id 1 user_id 1 book Sparta
+
+? name > users
 ```
