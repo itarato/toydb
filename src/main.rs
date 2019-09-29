@@ -17,6 +17,7 @@ mod engine_operator;
 mod index;
 mod query;
 mod query_parser;
+mod table_sync;
 mod util;
 
 use clap::{App, Arg};

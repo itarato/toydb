@@ -1,3 +1,4 @@
+// use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -19,7 +20,7 @@ impl fmt::Debug for Query {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Serialize, Deserialize)]
 pub enum Type {
     Int,
     Varchar(u8),
@@ -34,7 +35,7 @@ impl fmt::Debug for Type {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FieldDef {
     pub name: String,
     pub config: Type,
@@ -55,7 +56,11 @@ pub struct CreateQuery {
 
 impl CreateQuery {
     pub fn new(table: String, fields: Vec<FieldDef>, indices: Vec<String>) -> CreateQuery {
-        CreateQuery { table, fields, indices }
+        CreateQuery {
+            table,
+            fields,
+            indices,
+        }
     }
 }
 

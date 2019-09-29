@@ -1,14 +1,14 @@
-use query;
-use std::{str};
-use std::collections::HashMap;
-use util;
 use index;
+use query;
+use std::collections::HashMap;
+use std::str;
+use util;
 
-type Schema = HashMap<String, ColumnInfo>;
+pub type Schema = HashMap<String, ColumnInfo>;
 type Row = Vec<u8>;
 
-#[derive(Debug)]
-struct ColumnInfo {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ColumnInfo {
     name: String,
     offs: usize,
     size: usize,
@@ -28,15 +28,17 @@ impl ColumnInfo {
 
 #[derive(Debug)]
 pub struct Table<T: index::Index = index::BasicIndex> {
-    schema: Schema,
-    data: Vec<Row>,
+    pub schema: Schema,
+    pub data: Vec<Row>,
     indices: HashMap<String, T>,
 }
 
 impl<T: index::Index + Default> Table<T> {
     pub fn new(schema: Vec<query::FieldDef>, index_fields: Vec<String>) -> Table<T> {
         let mut indices: HashMap<String, T> = Default::default();
-        index_fields.iter().for_each(|field| { indices.insert(field.to_string(), Default::default()); });
+        index_fields.iter().for_each(|field| {
+            indices.insert(field.to_string(), Default::default());
+        });
 
         Table {
             schema: restructure_field_def_list(schema),
@@ -58,17 +60,21 @@ impl<T: index::Index + Default> Table<T> {
                         column_info.offs,
                         raw,
                         &column_info.field_def.config,
-                    ).or_else(|e| {
+                    )
+                    .or_else(|e| {
                         warn!("Data write error");
                         Err(e)
                     });
                     raw
                 }
-                None => ""
+                None => "",
             };
 
             if self.indices.contains_key(column_name) {
-                let real_val = raw_string_to_val(raw_val, &self.schema.get(column_name).unwrap().field_def.config);
+                let real_val = raw_string_to_val(
+                    raw_val,
+                    &self.schema.get(column_name).unwrap().field_def.config,
+                );
                 let mut index = self.indices.get_mut(column_name).unwrap();
 
                 index.insert(real_val.unwrap(), self.data.len());
@@ -81,7 +87,8 @@ impl<T: index::Index + Default> Table<T> {
         for (index_field, index) in &mut self.indices {
             if raw_inserts.contains_key(index_field) {
                 let data_type = &self.schema.get(index_field).unwrap().field_def.config;
-                let val = raw_string_to_val(raw_inserts.get(index_field).unwrap(), data_type).unwrap();
+                let val =
+                    raw_string_to_val(raw_inserts.get(index_field).unwrap(), data_type).unwrap();
                 index.insert(val, position);
             }
         }
@@ -90,7 +97,9 @@ impl<T: index::Index + Default> Table<T> {
     }
 
     fn schema_byte_size(&self) -> usize {
-        self.schema.iter().fold(0_usize, |acc, (_, elem)| acc + elem.size)
+        self.schema
+            .iter()
+            .fold(0_usize, |acc, (_, elem)| acc + elem.size)
     }
 }
 
@@ -98,9 +107,11 @@ fn raw_string_to_val(raw: &str, data_type: &query::Type) -> Result<util::Val, ()
     match data_type {
         &query::Type::Int => match u32::from_str_radix(raw, 10) {
             Ok(n) => Ok(util::Val::U32(n)),
-            Err(_) => Err(())
-        }
-        &query::Type::Varchar(len) => Ok(util::Val::Varchar((&raw[0..usize::min(len as usize, raw.len())]).to_owned()))
+            Err(_) => Err(()),
+        },
+        &query::Type::Varchar(len) => Ok(util::Val::Varchar(
+            (&raw[0..usize::min(len as usize, raw.len())]).to_owned(),
+        )),
     }
 }
 
@@ -293,7 +304,8 @@ impl Engine {
                     query::Type::Varchar(n) => {
                         let slice = str::from_utf8(
                             &row[column_info.offs..(column_info.offs + (n as usize))],
-                        ).unwrap();
+                        )
+                        .unwrap();
 
                         let slice = match slice.find('\0') {
                             Some(n) => slice[0..n].to_owned(),
@@ -334,8 +346,14 @@ mod test {
 
     #[test]
     fn test_raw_string_to_val_u32() {
-        assert_eq!(Ok(util::Val::U32(12)), raw_string_to_val("12", &query::Type::Int));
-        assert_eq!(Ok(util::Val::U32(0)), raw_string_to_val("0", &query::Type::Int));
+        assert_eq!(
+            Ok(util::Val::U32(12)),
+            raw_string_to_val("12", &query::Type::Int)
+        );
+        assert_eq!(
+            Ok(util::Val::U32(0)),
+            raw_string_to_val("0", &query::Type::Int)
+        );
     }
 
     #[test]
@@ -347,14 +365,29 @@ mod test {
 
     #[test]
     fn test_raw_string_to_val_varchar() {
-        assert_eq!(Ok(util::Val::Varchar("hello".to_owned())), raw_string_to_val("hello", &query::Type::Varchar(5)));
-        assert_eq!(Ok(util::Val::Varchar("123".to_owned())), raw_string_to_val("123", &query::Type::Varchar(3)));
-        assert_eq!(Ok(util::Val::Varchar("".to_owned())), raw_string_to_val("", &query::Type::Varchar(0)));
+        assert_eq!(
+            Ok(util::Val::Varchar("hello".to_owned())),
+            raw_string_to_val("hello", &query::Type::Varchar(5))
+        );
+        assert_eq!(
+            Ok(util::Val::Varchar("123".to_owned())),
+            raw_string_to_val("123", &query::Type::Varchar(3))
+        );
+        assert_eq!(
+            Ok(util::Val::Varchar("".to_owned())),
+            raw_string_to_val("", &query::Type::Varchar(0))
+        );
     }
 
     #[test]
     fn test_raw_string_to_val_varchar_different_size() {
-        assert_eq!(Ok(util::Val::Varchar("hel".to_owned())), raw_string_to_val("hello world", &query::Type::Varchar(3)));
-        assert_eq!(Ok(util::Val::Varchar("hello".to_owned())), raw_string_to_val("hello", &query::Type::Varchar(7)));
+        assert_eq!(
+            Ok(util::Val::Varchar("hel".to_owned())),
+            raw_string_to_val("hello world", &query::Type::Varchar(3))
+        );
+        assert_eq!(
+            Ok(util::Val::Varchar("hello".to_owned())),
+            raw_string_to_val("hello", &query::Type::Varchar(7))
+        );
     }
 }

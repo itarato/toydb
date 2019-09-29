@@ -1,10 +1,12 @@
 use engine;
 use query;
 use serde_json;
+use table_sync;
 
 #[derive(Default, Debug)]
 pub struct EngineOperator {
     engine: engine::Engine,
+    table_syncer: table_sync::TableSyncer,
 }
 
 impl EngineOperator {
@@ -14,6 +16,7 @@ impl EngineOperator {
         match query {
             query::Query::Create(q) => {
                 let _ = self.engine.create_table(q);
+                self.sync_tables()?;
                 Ok("".to_owned())
             }
             query::Query::Select(q) => {
@@ -29,9 +32,17 @@ impl EngineOperator {
             }
             query::Query::Insert(q) => {
                 let _ = self.engine.insert(q);
+                self.sync_tables()?;
                 Ok("".to_owned())
             }
             query::Query::Describe(_) => Ok(self.engine.describe_db()),
         }
+    }
+
+    fn sync_tables(&self) -> Result<(), ()> {
+        for (table_name, table) in &self.engine.tables {
+            self.table_syncer.create(table_name.clone(), &table)?;
+        }
+        Ok(())
     }
 }
