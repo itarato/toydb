@@ -53,7 +53,8 @@ fn main() {
 
     info!("DB is starting");
 
-    let dbs: dbserver::DBServer = Default::default();
+    let mut dbs: dbserver::DBServer = Default::default();
+    dbs.init();
 
     if let Some(file_name) = matches.value_of("dump") {
         info!("Got file-argument: {}", file_name);

@@ -17,6 +17,10 @@ pub struct DBServer {
 }
 
 impl DBServer {
+    pub fn init(&mut self) {
+        self.engine_operator.lock().unwrap().init();
+    }
+
     pub fn run(&self) {
         let addr = ([127, 0, 0, 1], 8421).into();
         let eo = self.engine_operator.clone();
@@ -75,7 +79,7 @@ fn prepare_response(
     req: Request<Body>,
     engine_operator: Arc<Mutex<engine_operator::EngineOperator>>,
     query_parser: Arc<query_parser::QueryParser>,
-) -> Box<Future<Item=Response<Body>, Error=hyper::Error> + Send> {
+) -> Box<Future<Item = Response<Body>, Error = hyper::Error> + Send> {
     match req.method() {
         &Method::POST => {
             let fut = req.into_body().concat2().and_then(move |chunk| {

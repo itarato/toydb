@@ -10,6 +10,11 @@ pub struct EngineOperator {
 }
 
 impl EngineOperator {
+    pub fn init(&mut self) -> Result<(), ()> {
+        self.engine.tables = dbg!(self.table_syncer.read_tables()?);
+        Ok(())
+    }
+
     pub fn execute(&mut self, query: query::Query) -> Result<String, ()> {
         info!("Execute query");
 

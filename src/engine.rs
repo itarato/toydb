@@ -42,8 +42,16 @@ impl<T: index::Index + Default> Table<T> {
 
         Table {
             schema: restructure_field_def_list(schema),
-            data: vec![],
+            data: Vec::new(),
             indices,
+        }
+    }
+
+    pub fn new_with_schema(schema: Schema) -> Table<T> {
+        Table {
+            schema,
+            data: Vec::new(),
+            indices: HashMap::new(),
         }
     }
 
